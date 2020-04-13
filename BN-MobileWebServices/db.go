@@ -3,13 +3,12 @@ package main
 import (
 	"log"
 
-	"github.com/gorilla/mux"
-
 	"github.com/go-bongo/bongo"
 )
 
 var connection = conDb()
-var routers = router()
+
+//var routers = router()
 
 func conDb() *bongo.Connection {
 	config := &bongo.Config{
@@ -22,7 +21,14 @@ func conDb() *bongo.Connection {
 	}
 	return connection
 }
-func router() *mux.Router {
-	router := mux.NewRouter().StrictSlash(true)
-	return router
+
+/*
+func router() *http.ServeMux {
+	mux := http.NewServeMux()
+	return mux
 }
+func handler() http.Handler {
+	handler := cors.Default().Handler(router())
+	return handler
+}
+*/

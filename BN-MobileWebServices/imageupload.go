@@ -35,6 +35,7 @@ func base64ToImage(bs64 string) []byte {
 
 	return dec
 }
+
 func saveImage(img []byte, ID string) (bool, string) {
 
 	loc, _ := time.LoadLocation("Asia/Istanbul")

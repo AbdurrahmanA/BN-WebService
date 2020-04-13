@@ -1,21 +1,28 @@
 package main
 
 import (
-	"log"
 	"net/http"
+
+	"github.com/rs/cors"
 )
 
 func main() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/login", loginPage)
+	mux.HandleFunc("/updateprofile", updateProfilePage)
+	mux.HandleFunc("/updatedevice", updateDevicePage)
+	mux.HandleFunc("/profile", profilePage)
+	mux.HandleFunc("/devices", devicesPage)
+	mux.HandleFunc("/devicedetail", deviceDetailsPage)
+	mux.HandleFunc("/lostdevices", lostDevicesPage)
+	mux.HandleFunc("/addlostdevice", addLostDevicePage)
+	mux.HandleFunc("/products", productsListPage)
+	mux.HandleFunc("/addproduct", addProductPage)
+	mux.HandleFunc("/register", registerPage)
+	mux.HandleFunc("/registercontrol", validationRegisterPage)
 
-	routers.HandleFunc("/login", login).Methods("POST")
-	routers.HandleFunc("/update", updateInfo).Methods("GET")
-	routers.HandleFunc("/updatedevice", updateDeviceInfo).Methods("GET")
-	routers.HandleFunc("/profile", profileInfos).Methods("POST")
-	routers.HandleFunc("/devices", myDevices).Methods("POST")
-	routers.HandleFunc("/devicesdetail", myDevicesDetails).Methods("POST")
-	routers.HandleFunc("/lostpage", lostDeviceList)
-	routers.HandleFunc("/addlostbeacon", addlostbeaconspage)
+	handler := cors.Default().Handler(mux)
 
-	log.Fatal(http.ListenAndServe(":8090", routers))
+	http.ListenAndServe(":8090", handler)
 
 }
