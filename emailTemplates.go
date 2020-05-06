@@ -1,93 +1,6 @@
 package main
 
-import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"os"
-	"regexp"
-
-	"github.com/globalsign/mgo/bson"
-	"github.com/sendgrid/sendgrid-go"
-	"github.com/sendgrid/sendgrid-go/helpers/mail"
-)
-
-func checkMail(newValues string) bool {
-	person := &Person{}
-	connection.Collection("users").FindOne(bson.M{"user_info.user_mail": newValues}, person)
-	if person.UserInfos.UserMail != "" {
-		return false
-	}
-	return true
-}
-
-func checkPhone(newValues string) bool {
-	person := &Person{}
-	connection.Collection("users").FindOne(bson.M{"contact_info.user_phone": newValues}, person)
-	if person.Contacts.UserPhone != "" {
-		return false
-	}
-	return true
-}
-func checkBeaconType(beaconType int) string {
-	if beaconType == 0 {
-		return "Tasma"
-	}
-	if beaconType == 1 {
-		return "Bileklik"
-	}
-	if beaconType == 5 {
-		return "Kalemlik"
-	}
-	return ""
-}
-func checkObjID(id string) (string, bool) {
-	var s = bson.IsObjectIdHex(id)
-	if s == true {
-		return id, true
-	}
-	return "", false
-}
-func writeResponse(w http.ResponseWriter, jsonValue string) {
-	w.Header().Add("Content-Type", "application/json")
-	w.Write([]byte(jsonValue))
-}
-func addError(byteJSON []byte) []byte {
-	var m map[string]interface{}
-	json.Unmarshal(byteJSON, &m)
-	m["error"] = false
-	newData, _ := json.Marshal(m)
-	return newData
-}
-func checkPermission(token string) bool {
-	person := &Person{}
-	connection.Collection("users").FindOne(bson.M{"user_info.user_token": token}, person)
-	if person.UserInfos.RoleLvl == 5 {
-		return true
-	}
-	return false
-}
-
-func checkPhoneNumber(number string) bool {
-	regex := regexp.MustCompile("^[+]?(?:[0-9]{2})?[0-9]{10}$")
-	match := regex.MatchString(number)
-	if match == true {
-		return true
-	}
-	return false
-}
-func checkEmailValidity(email string) bool {
-	regex := regexp.MustCompile("^[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-zA-Z0-9-.]+$")
-
-	match := regex.MatchString(email)
-	if match == true {
-		return true
-	}
-	return false
-}
-func sendRegisterMail(token string, email string) bool {
-	url := "http://92.44.120.164:8090/registercontrol?token="
-
+func registerEmailTemplate(urlToken string) string {
 	var temps = `
 	<!DOCTYPE html>
 	<html>
@@ -231,7 +144,7 @@ func sendRegisterMail(token string, email string) bool {
 						<table border="0" cellpadding="0" cellspacing="0">
 						<tr>
 							<td align="center" bgcolor="#1a82e2" style="border-radius: 6px;" >
-							<a href="` + url + token + `"target="_blank" style="display: inline-block; padding: 16px 36px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px;">Onayla</a>
+							<a href="` + urlToken + `"target="_blank" style="display: inline-block; padding: 16px 36px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px;">Onayla</a>
 							</td>
 						</tr>
 						</table>
@@ -243,7 +156,7 @@ func sendRegisterMail(token string, email string) bool {
 			<tr>
 				<td align="left" bgcolor="#ffffff" style="padding: 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
 				<p style="margin: 0;">Bu işe yaramazsa, aşağıdaki bağlantıyı kopyalayıp tarayıcınıza yapıştırın:</p>
-				<p style="margin: 0;"><a  href="https://benimkinerede.com" target="_blank">` + url + token + `</a></p>
+				<p style="margin: 0;"><a  href="" target="_blank">` + urlToken + `</a></p>
 				</td>
 			</tr>
 			</table>
@@ -253,26 +166,5 @@ func sendRegisterMail(token string, email string) bool {
 	</body>
 	</html>
 		`
-
-	fromEmail := "abdurrahman262@hotmail.com"
-	from := mail.NewEmail("BenimkiNerede", fromEmail)
-	subject := "Email Onay"
-	to := mail.NewEmail(email, email)
-	plainTextContent := "text/html"
-	//htmlContent := "<strong>"  "</strong>"
-	message := mail.NewSingleEmail(from, subject, to, plainTextContent, temps)
-	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
-	response, err := client.Send(message)
-
-	if err != nil {
-		fmt.Println(response.StatusCode)
-		return false
-	}
-	if response.StatusCode != 202 {
-		fmt.Println(response.StatusCode)
-		fmt.Println(response.Body)
-		fmt.Println(response.Headers)
-		return false
-	}
-	return true
+	return temps
 }

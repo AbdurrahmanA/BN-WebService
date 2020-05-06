@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/globalsign/mgo/bson"
 )
@@ -38,10 +39,15 @@ func getMyDevices(getID string) ([]byte, string) {
 	id, errID := checkObjID(getID)
 	if errID == true {
 		beacon := &Beacon{}
-		beacons := connection.Collection("beacons").Find(bson.M{"user.user_id": bson.ObjectIdHex(id)})
+		beacons := connection.Collection("beacons").Find(bson.M{"user_infos.user_id": bson.ObjectIdHex(id)})
 		for beacons.Next(beacon) {
 			beaconTypeConverter := checkBeaconType(beacon.Information.BeaconType)
-			user = &MyDevices{beacon.Id, beacon.Information.BeaconName, beaconTypeConverter}
+			beaconImg := ""
+			if beacon.Information.Image != "" {
+				dt := time.Now()
+				beaconImg = "http://213.14.182.224:8090/" + beacon.Information.Image + "?day=" + dt.Format("01-02-2006") + "?hour=" + dt.Format("15:04:05")
+			}
+			user = &MyDevices{beacon.Id, beacon.Information.UUID, beacon.Information.BeaconName, beaconTypeConverter, beacon.Information.Variance, beaconImg}
 			l = append(l, user)
 		}
 		data, _ = json.Marshal(l)
