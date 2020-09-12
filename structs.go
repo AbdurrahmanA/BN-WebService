@@ -11,19 +11,22 @@ import (
 type Person struct {
 	bongo.DocumentBase `bson:",inline"`
 	Contacts           struct {
-		UserRealName string `bson:"user_real_name" json:"user_real_name"`
-		UserSurname  string `bson:"user_surname" json:"user_surname"`
-		UserAddress  string `bson:"user_address" json:"user_address"`
-		UserPhone    string `bson:"user_phone" json:"user_phone"`
-	} `bson:"contact_infos"  `
+		UserRealName string `bson:"user_real_name"`
+		UserSurname  string `bson:"user_surname"`
+		UserAddress  string `bson:"user_address"`
+		UserPhone    string `bson:"user_phone"`
+	} `bson:"contact_infos"`
 	UserInfos struct {
-		UserPassword   string `bson:"user_password" json:"user_password"`
-		UserMail       string `bson:"user_mail" json:"user_mail"`
-		UserWebToken   string `bson:"user_web_token" json:"user_web_token"`
-		UserMobilToken string `bson:"user_mobile_token" json:"user_mobile_token"`
-		RoleLvl        int    `bson:"role_lvl" json:"role_lvl"`
-		Image          string `bson:"img" json:"img"`
-	} `bson:"user_infos"  `
+		UserPassword   string `bson:"user_password"`
+		UserMail       string `bson:"user_mail"`
+		UserWebToken   string `bson:"user_web_token"`
+		UserMobilToken string `bson:"user_mobile_token"`
+		RoleLvl        int    `bson:"role_lvl"`
+		Image          string `bson:"img" `
+	} `bson:"user_infos"`
+	PushInfos struct {
+		PushID string `bson:"push_id"`
+	} `bson:"push_infos"`
 }
 
 //Userjon  Giriş işlemi için gerekli dönüşleri oluşturmamızı sağlayan yapı
@@ -53,6 +56,7 @@ type Beacon struct {
 		Image      string    `bson:"image" json:"image"`
 		BeaconType int       `bson:"type" json:"type"`
 		LastSeen   time.Time `bson:"last_seen" json:"last_seen"`
+		LostStatus bool      `bson:"lost_status" json:"lost_status" `
 	} `bson:"beacon_infos"  `
 	UserInfos struct {
 		UserID    bson.ObjectId `bson:"user_id" json:"user_id" `
@@ -63,9 +67,11 @@ type Beacon struct {
 
 //StockView beacon verileri stock ekranın için hazırlanması
 type StockView struct {
-	UUID  string ` json:"uuid"`
-	Major int    ` json:"major"`
-	Minor int    ` json:"minor"`
+	UUID  string        ` json:"uuid"`
+	Major int           ` json:"major"`
+	Minor int           ` json:"minor"`
+	Type  string        ` json:"type"`
+	ID    bson.ObjectId ` json:"id"`
 }
 
 //StockViewArray beacon verileri stock ekranında vermemizi saglar
@@ -76,44 +82,47 @@ type StockViewArray struct {
 //Orders Sipariş bilgileri için gerekli veritabanı yapısı
 type Orders struct {
 	bongo.DocumentBase `bson:",inline"`
-	OrderStatus        int     `bson:"order_status" json:"order_status" `
-	InOrder            []Order `bson:"orders" json:"orders" `
-	PaymentType        string  `bson:"payment_type" json:"payment_type" `
-	TotalPrice         int     `bson:"total_price" json:"total_price" `
+	OrderStatus        int                 `bson:"order_status"  `
+	InOrder            []OrderArrayInMongo `bson:"orders" `
+	PaymentType        string              `bson:"payment_type"  `
+	TotalPrice         float64             `bson:"total_price"  `
 	ContactInfo        struct {
-		UserID      string `bson:"user_id" json:"user_id" `
-		UserSurname string `bson:"user_surname" json:"user_surname"`
-		UserAddress string `bson:"user_address" json:"user_address"`
-		UserPhone   string `bson:"user_phone" json:"user_phone"`
-	} `bson:"contact_info" json:"contact_info"`
+		UserID       bson.ObjectId `bson:"user_id"  `
+		UserSurname  string        `bson:"user_surname" `
+		UserRealName string        `bson:"user_real_name" `
+		UserAddress  string        `bson:"user_address" `
+		UserPhone    string        `bson:"user_phone" `
+		UserMail     string        `bson:"user_mail" `
+	} `bson:"contact_info" `
 }
 
 //OrdersInWeb Sipariş bilgileri için gerekli  yapısı
 type OrdersInWeb struct {
-	OrderStatus int               ` json:"order_status" `
-	InOrder     []OrderArrayInWeb ` json:"orders" `
-	PaymentType string            ` json:"payment_type" `
-	TotalPrice  int               ` json:"total_price" `
-	ContactInfo struct {
-		UserID      string ` json:"user_id" `
-		UserSurname string ` json:"user_surname"`
-		UserAddress string ` json:"user_address"`
-		UserPhone   string ` json:"user_phone"`
-	} ` json:"contact_info"`
+	Time         time.Time           ` json:"time" `
+	OrderStatus  int                 ` json:"order_status" `
+	InOrder      []OrderArrayInMongo ` json:"orders" `
+	PaymentType  string              ` json:"payment_type" `
+	TotalPrice   float64             ` json:"total_price" `
+	UserSurname  string              ` json:"user_surname"`
+	UserRealName string              ` json:"user_real_name"`
+	UserAddress  string              ` json:"user_address"`
+	UserPhone    string              ` json:"user_phone"`
+	UserMail     string              ` json:"user_mail"`
 }
 
-//OrderArrayInWeb web den gelen ürünlerin düzenlenmesi için gerekli yapı
-type OrderArrayInWeb struct {
-	ProductID    string  ` json:"product_id" `
-	ProductName  string  ` json:"product_name" `
-	ProductPrice float32 ` json:"product_price" `
+//OrdersInWebArr Sipariş bilgileri için gerekli  yapısı
+type OrdersInWebArr struct {
+	Orders []*OrdersInWeb ` json:"orders" `
 }
 
-//Order Toplam ürünler için gerekli yapı
-type Order struct {
-	ProductID    bson.ObjectId `bson:"product_id" json:"product_id" `
-	ProductName  string        `bson:"product_name" json:"product_name" `
-	ProductPrice float32       `bson:"product_price" json:"product_price" `
+//OrderArrayInMongo Toplam ürünler için gerekli yapı
+type OrderArrayInMongo struct {
+	ProductID          bson.ObjectId `bson:"product_id" `
+	ProductType        int           `bson:"product_type" `
+	ProductPrice       float64       `bson:"product_price" `
+	Quantity           int           `bson:"quantity" `
+	ProductDescription string        `bson:"product_description"`
+	ProductName        string        `bson:"product_name"`
 }
 
 //Log Yapılan işlemlerin takipi için gerekli yapı
@@ -152,11 +161,10 @@ type LostBeacon struct {
 //Products Ürün verileri için gerekli yapı
 type Products struct {
 	bongo.DocumentBase `bson:",inline"`
-	ProductID          bson.ObjectId ` json:"product_id" `
-	ProductDescription string        `bson:"product_description" json:"product_description" `
-	ProductName        string        `bson:"product_name" json:"product_name" `
-	ProductPrice       float32       `bson:"product_price" json:"product_price" `
-	ProductType        int           `bson:"type" json:"type" `
+	ProductDescription string  `bson:"product_description" json:"product_description" `
+	ProductName        string  `bson:"product_name" json:"product_name" `
+	ProductPrice       float32 `bson:"product_price" json:"product_price" `
+	ProductType        int     `bson:"type" json:"type" `
 }
 
 //ProductsInApp Ürün verilerini gönderme için gerekli yapı
@@ -203,6 +211,7 @@ type MyDevices struct {
 	BeaconType string        ` json:"type"`
 	Variance   int           ` json:"variance"`
 	Image      string        ` json:"img"`
+	LostStatus bool          ` json:"lost_status"`
 }
 
 //MyDevicesDetail cihazın gerekli bilgileri
@@ -242,4 +251,55 @@ type FindLostBeacon struct {
 	UserPhone  string        `json:"user_phone" `
 	UserMail   string        `json:"user_mail"`
 	LostStatus bool          `json:"lost_status"`
+}
+
+//NotificationForAll bildirimlerin yapısı
+type NotificationForAll struct {
+	bongo.DocumentBase `bson:",inline"`
+	Title              string `bson:"title"`
+	Description        string `bson:"description"`
+	ImportanceType     int    `bson:"importance_type"`
+}
+
+//NotificationForGroups bildirimlerin yapısı
+type NotificationForGroups struct {
+	bongo.DocumentBase `bson:",inline"`
+	Title              string `bson:"title"`
+	GroupTypes         int    `bson:"group_types" `
+	Description        string `bson:"description"`
+	ImportanceType     int    `bson:"importance_type"`
+}
+
+//NotificationForUser bildirimlerin yapısı
+type NotificationForUser struct {
+	bongo.DocumentBase `bson:",inline"`
+	Title              string        `bson:"title"`
+	UserID             bson.ObjectId `bson:"user_id"`
+	Description        string        `bson:"description"`
+	ImportanceType     int           `bson:"importance_type"`
+}
+
+//MyNotifications bildirimlerin yapısı
+type MyNotifications struct {
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Date        time.Time `json:"date"`
+}
+
+//MyNotificationsArr bildirimlerin yapısı
+type MyNotificationsArr struct {
+	Notifications []*MyNotifications `json:"notifications"`
+}
+
+//NotificationsIDList bildirimlerin yapısı
+type NotificationsIDList struct {
+	ID      string        `json:"push_id"`
+	ObjID   bson.ObjectId `json:"user_id"`
+	Name    string        `json:"name"`
+	Surname string        `json:"surname"`
+}
+
+//NotificationsIDListArr bildirimlerin yapısı
+type NotificationsIDListArr struct {
+	Users []*NotificationsIDList `json:"users"`
 }

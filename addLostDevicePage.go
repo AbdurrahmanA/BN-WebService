@@ -73,10 +73,7 @@ func addLostDeviceControl(phone string, email string, creditCardNo string, credi
 	if errID == true {
 		lostDeviceControl := &LostBeacon{}
 		err := connection.Collection("lost_beacons").FindOne(bson.M{"beacon_infos.beacon_id": bson.ObjectIdHex(beaconID), "lost_status": true}, lostDeviceControl)
-		if err != nil {
-			return false, "NotFound"
-		}
-		if lostDeviceControl.BeaconInfos.BeaconID == bson.ObjectIdHex(beaconID) {
+		if err == nil {
 			return false, "Already"
 		}
 		errBeacon := connection.Collection("beacons").FindById(bson.ObjectIdHex(beaconID), beacon)
@@ -101,12 +98,19 @@ func addLostDeviceControl(phone string, email string, creditCardNo string, credi
 			LostLat:    floatLostLat,
 			LostLong:   floatLostLong,
 		}
+		lostDevice.BeaconInfos.UUID = beacon.Information.UUID
+		lostDevice.BeaconInfos.BeaconName = beacon.Information.BeaconName
 		lostDevice.LostDesc = lostDesc
 		lostDevice.UserInfos.UserMail = email
 		lostDevice.UserInfos.UserPhone = phone
 		lostDevice.BeaconInfos.BeaconID = beacon.Id
 		lostDevice.UserInfos.UserID = beacon.UserInfos.UserID
 		errs := connection.Collection("lost_beacons").Save(lostDevice)
+		if errs != nil {
+			return false, "Save"
+		}
+		beacon.Information.LostStatus = true
+		errs = connection.Collection("beacons").Save(beacon)
 		if errs != nil {
 			return false, "Save"
 		}
